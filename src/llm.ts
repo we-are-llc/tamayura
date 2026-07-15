@@ -44,14 +44,31 @@ export async function createWebLLMAssistant(
 
   async function chat(
     messages: { role: "system" | "user" | "assistant"; content: string }[],
-    maxTokens: number
+    maxTokens: number,
+    jsonMode: boolean
   ): Promise<string> {
     const res = await engine.chat.completions.create({
       messages,
       temperature: 0.3,
-      max_tokens: maxTokens
+      max_tokens: maxTokens,
+      // Qwen3の思考モードをテンプレートレベルで無効化(思考トークンの浪費と出力崩れを防ぐ)
+      extra_body: { enable_thinking: false },
+      ...(jsonMode ? { response_format: { type: "json_object" as const } } : {})
     });
     return stripThink(res.choices[0]?.message?.content ?? "");
+  }
+
+  /** JSONグラマー強制で呼び、環境が対応していなければ通常モードで再試行する */
+  async function chatForJson(
+    messages: { role: "system" | "user" | "assistant"; content: string }[],
+    maxTokens: number
+  ): Promise<string> {
+    try {
+      return await chat(messages, maxTokens, true);
+    } catch (err) {
+      console.warn("json mode failed, retrying without grammar:", err);
+      return await chat(messages, maxTokens, false);
+    }
   }
 
   return {
@@ -73,13 +90,13 @@ export async function createWebLLMAssistant(
         });
       }
 
-      let raw = await chat(messages, 700);
+      let raw = await chatForJson(messages, 1000);
       let result = parseDecomposeResult(raw);
       if (!result) {
         // JSONとして読めなかったら、形式を念押しして1回だけリトライ
         messages.push({ role: "assistant", content: raw });
         messages.push({ role: "user", content: RETRY_JSON_MESSAGE });
-        raw = await chat(messages, 700);
+        raw = await chatForJson(messages, 1000);
         result = parseDecomposeResult(raw);
       }
       if (!result) throw new Error("decompose failed: " + raw.slice(0, 200));
@@ -93,16 +110,20 @@ export async function createWebLLMAssistant(
           { role: "system", content: HELP_SYSTEM(taskTitle, stepTitle) },
           { role: "user", content: question }
         ],
-        300
+        400,
+        false
       );
       return answer.trim() || "うまく こたえられなかったよ。おうちの人に きいてみてね。";
     }
   };
 }
 
-/** Qwen3 の <think>...</think> ブロックを除去する */
+/** Qwen3 の <think>...</think> ブロックを除去する(未クローズの場合は以降を捨てる) */
 function stripThink(text: string): string {
-  return text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+  let t = text.replace(/<think>[\s\S]*?<\/think>/g, "");
+  const open = t.indexOf("<think>");
+  if (open >= 0) t = t.slice(0, open);
+  return t.trim();
 }
 
 /** モデル出力からJSONを抽出・検証・正規化する */

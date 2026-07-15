@@ -42,32 +42,36 @@ export async function createWebLLMAssistant(
     }
   });
 
+  // 端末性能によっては生成が終わらないことがあるため、必ずタイムアウトで打ち切る
+  const CHAT_TIMEOUT_MS = 60_000;
+
   async function chat(
     messages: { role: "system" | "user" | "assistant"; content: string }[],
-    maxTokens: number,
-    jsonMode: boolean
+    maxTokens: number
   ): Promise<string> {
-    const res = await engine.chat.completions.create({
+    const request = engine.chat.completions.create({
       messages,
       temperature: 0.3,
       max_tokens: maxTokens,
       // Qwen3の思考モードをテンプレートレベルで無効化(思考トークンの浪費と出力崩れを防ぐ)
-      extra_body: { enable_thinking: false },
-      ...(jsonMode ? { response_format: { type: "json_object" as const } } : {})
+      extra_body: { enable_thinking: false }
     });
-    return stripThink(res.choices[0]?.message?.content ?? "");
-  }
-
-  /** JSONグラマー強制で呼び、環境が対応していなければ通常モードで再試行する */
-  async function chatForJson(
-    messages: { role: "system" | "user" | "assistant"; content: string }[],
-    maxTokens: number
-  ): Promise<string> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        try {
+          void engine.interruptGenerate();
+        } catch {
+          /* noop */
+        }
+        reject(new Error("AIの こたえが 60びょう いじょう かかったため、うちきりました"));
+      }, CHAT_TIMEOUT_MS);
+    });
     try {
-      return await chat(messages, maxTokens, true);
-    } catch (err) {
-      console.warn("json mode failed, retrying without grammar:", err);
-      return await chat(messages, maxTokens, false);
+      const res = await Promise.race([request, timeout]);
+      return stripThink(res.choices[0]?.message?.content ?? "");
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -90,13 +94,13 @@ export async function createWebLLMAssistant(
         });
       }
 
-      let raw = await chatForJson(messages, 1000);
+      let raw = await chat(messages, 600);
       let result = parseDecomposeResult(raw);
       if (!result) {
         // JSONとして読めなかったら、形式を念押しして1回だけリトライ
         messages.push({ role: "assistant", content: raw });
         messages.push({ role: "user", content: RETRY_JSON_MESSAGE });
-        raw = await chatForJson(messages, 1000);
+        raw = await chat(messages, 600);
         result = parseDecomposeResult(raw);
       }
       if (!result) throw new Error("decompose failed: " + raw.slice(0, 200));
@@ -110,8 +114,7 @@ export async function createWebLLMAssistant(
           { role: "system", content: HELP_SYSTEM(taskTitle, stepTitle) },
           { role: "user", content: question }
         ],
-        400,
-        false
+        400
       );
       return answer.trim() || "うまく こたえられなかったよ。おうちの人に きいてみてね。";
     }

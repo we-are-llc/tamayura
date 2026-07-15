@@ -21,6 +21,7 @@ let assistant: Assistant | null = null;
 let simpleModeNotice = false; // AIが使えず「かんたんモード」になったことの表示用
 let lastAiError: string | null = null; // 診断用: AIが使えなかった理由
 let lastDecomposeWasFallback = false; // 直前の分解がテンプレートによるものか
+let navToken = 0; // ホームに戻ったら進行中のAI処理の結果を画面に反映しないためのトークン
 
 // ---------------------------------------------------------------------------
 // 小さなDOMヘルパー
@@ -226,7 +227,9 @@ function renderLoading(): { update: (p: number) => void } {
 function renderThinking(message: string): void {
   const screen = el("div", { class: "screen loading-screen" }, [
     el("div", { class: "chara", "aria-hidden": "true" }),
-    el("p", { class: "loading-big thinking-dots" }, [message])
+    el("p", { class: "loading-big thinking-dots" }, [message]),
+    el("p", { class: "note" }, ["すこし じかんが かかることが あるよ"]),
+    button("← やめて ホームへ", "btn-ghost", renderHome)
   ]);
   show(screen);
 }
@@ -236,6 +239,7 @@ function renderThinking(message: string): void {
 // ---------------------------------------------------------------------------
 
 function renderHome(): void {
+  navToken++;
   stopSpeaking();
   const tasks = loadTasks();
   const active = tasks.filter((t) => !t.completedAt);
@@ -387,10 +391,12 @@ function renderSettingsScreen(): void {
 // ---------------------------------------------------------------------------
 
 async function startTask(text: string): Promise<void> {
+  const token = navToken;
   const ai = await ensureAssistant();
   renderThinking("ステップに わけているよ");
   try {
     const result = await ai.decompose(text);
+    if (token !== navToken) return; // とちゅうでホームに戻っていたら何もしない
     lastDecomposeWasFallback = ai.kind === "simple";
     if (result.type === "question") {
       renderClarify(text, result.question);
@@ -400,6 +406,7 @@ async function startTask(text: string): Promise<void> {
   } catch (err) {
     console.warn("decompose failed, using simple mode for this task:", err);
     lastAiError = `AIの こたえを よみとれませんでした: ${String(err).slice(0, 300)}`;
+    if (token !== navToken) return;
     lastDecomposeWasFallback = true;
     const simple = createSimpleAssistant();
     const result = await simple.decompose(text);
@@ -422,10 +429,12 @@ function renderClarify(taskText: string, question: string): void {
 }
 
 async function answerClarify(taskText: string, question: string, answer: string): Promise<void> {
+  const token = navToken;
   const ai = await ensureAssistant();
   renderThinking("ステップに わけているよ");
   try {
     const result = await ai.decompose(taskText, { question, answer });
+    if (token !== navToken) return;
     if (result.type === "steps") {
       lastDecomposeWasFallback = ai.kind === "simple";
       createAndPreviewTask(taskText, result.steps);
@@ -435,6 +444,7 @@ async function answerClarify(taskText: string, question: string, answer: string)
     console.warn("clarify decompose failed:", err);
     lastAiError = `AIの こたえを よみとれませんでした: ${String(err).slice(0, 300)}`;
   }
+  if (token !== navToken) return;
   // 2回目も質問が返る・失敗する場合は、かんたんモードで必ず前に進める
   lastDecomposeWasFallback = true;
   const simple = createSimpleAssistant();

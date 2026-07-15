@@ -1,0 +1,13 @@
+{
+  "name": "たまゆらステップ",
+  "short_name": "たまゆら",
+  "description": "やることを ちいさなステップに わけてくれる、こどものための おてつだいアプリ",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#fdf6ec",
+  "theme_color": "#fdf6ec",
+  "lang": "ja",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

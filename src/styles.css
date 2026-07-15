@@ -1,0 +1,512 @@
+/* たまゆらステップ — 感覚過敏に配慮した、やわらかい配色と静かな動き */
+
+:root {
+  --bg: #fdf6ec;
+  --card: #ffffff;
+  --ink: #4a4038;
+  --ink-soft: #8a7d70;
+  --accent: #f0a35e;
+  --accent-soft: #ffe3c2;
+  --green: #7bc7a3;
+  --green-soft: #e2f3ea;
+  --blue: #8fb8d8;
+  --blue-soft: #e6f0f8;
+  --pink-soft: #ffe9e3;
+  --danger: #d88;
+  --radius: 22px;
+  --shadow: 0 4px 14px rgba(90, 70, 50, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Hiragino Maru Gothic ProN", "BIZ UDGothic", "Yu Gothic",
+    "Noto Sans JP", system-ui, sans-serif;
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+#app {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+  min-height: 100dvh;
+}
+
+button {
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* ---------- 共通部品 ---------- */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: fadein 0.35s ease;
+}
+
+@keyframes fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.app-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-title img {
+  width: 40px;
+  height: 40px;
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  font-size: 20px;
+  font-weight: 700;
+  background: var(--accent-soft);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-green {
+  background: var(--green);
+  color: #fff;
+  font-size: 24px;
+  padding: 22px 20px;
+}
+
+.btn-soft {
+  background: var(--blue-soft);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 16px;
+  font-weight: 500;
+  padding: 10px;
+}
+
+.btn-icon {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  border-radius: 50%;
+  font-size: 26px;
+  background: var(--blue-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon.listening {
+  background: var(--pink-soft);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.07); }
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.note {
+  color: var(--ink-soft);
+  font-size: 15px;
+  margin: 0;
+}
+
+.text-input {
+  width: 100%;
+  border: 3px solid var(--accent-soft);
+  border-radius: var(--radius);
+  padding: 16px;
+  font-size: 20px;
+  font-family: inherit;
+  background: #fff;
+  color: var(--ink);
+}
+
+.text-input::placeholder {
+  color: #c8bcae;
+}
+
+/* ---------- ホーム ---------- */
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.task-item .task-meta {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.task-item .task-emoji {
+  font-size: 26px;
+}
+
+.section-label {
+  font-size: 16px;
+  color: var(--ink-soft);
+  margin: 6px 0 0;
+  font-weight: 700;
+}
+
+/* ---------- ローディング ---------- */
+
+.loading-screen {
+  align-items: center;
+  text-align: center;
+  padding-top: 40px;
+}
+
+.chara {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: #ffd9a0;
+  position: relative;
+  animation: floaty 3s ease-in-out infinite;
+  box-shadow: var(--shadow);
+}
+
+.chara::before {
+  /* 目 */
+  content: "";
+  position: absolute;
+  top: 52px;
+  left: 34px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #5b4636;
+  box-shadow: 44px 0 0 #5b4636;
+}
+
+.chara::after {
+  /* 口 */
+  content: "";
+  position: absolute;
+  top: 72px;
+  left: 50px;
+  width: 30px;
+  height: 14px;
+  border-bottom: 4px solid #5b4636;
+  border-radius: 0 0 20px 20px;
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.progress-track {
+  width: 100%;
+  max-width: 320px;
+  height: 18px;
+  border-radius: 9px;
+  background: #f0e5d5;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 9px;
+  background: var(--green);
+  transition: width 0.4s ease;
+}
+
+.loading-big {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* ---------- ステップ実行 ---------- */
+
+.step-progress {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.step-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ece0cf;
+}
+
+.step-dot.done {
+  background: var(--green);
+}
+
+.step-dot.now {
+  background: var(--accent);
+  transform: scale(1.25);
+}
+
+.step-card {
+  text-align: center;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+}
+
+.step-number {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.step-title {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.step-minutes {
+  display: inline-block;
+  background: var(--blue-soft);
+  border-radius: 999px;
+  padding: 6px 18px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #5a7a94;
+}
+
+.task-heading {
+  text-align: center;
+  font-size: 17px;
+  color: var(--ink-soft);
+  margin: 0;
+  font-weight: 700;
+}
+
+/* ---------- できたね(完了) ---------- */
+
+.celebrate-screen {
+  align-items: center;
+  text-align: center;
+  padding-top: 30px;
+}
+
+.celebrate-big {
+  font-size: 34px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.stars {
+  font-size: 40px;
+  letter-spacing: 10px;
+}
+
+/* ---------- 質問(こまったとき)オーバーレイ ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(74, 64, 56, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+}
+
+.overlay-panel {
+  background: var(--bg);
+  border-radius: 26px 26px 0 0;
+  width: 100%;
+  max-width: 560px;
+  max-height: 82dvh;
+  overflow-y: auto;
+  padding: 20px 16px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.chat-q {
+  align-self: flex-end;
+  background: var(--accent-soft);
+  border-radius: 18px 18px 4px 18px;
+  padding: 12px 16px;
+  max-width: 85%;
+}
+
+.chat-a {
+  align-self: flex-start;
+  background: var(--card);
+  border-radius: 18px 18px 18px 4px;
+  padding: 12px 16px;
+  max-width: 85%;
+  box-shadow: var(--shadow);
+}
+
+.thinking-dots::after {
+  content: "…";
+  animation: blink 1.4s infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.3; }
+}
+
+/* ---------- きろく(レポート / PDF) ---------- */
+
+.report-task {
+  border-bottom: 2px dashed #eadfce;
+  padding: 14px 0;
+}
+
+.report-task:last-child {
+  border-bottom: none;
+}
+
+.report-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.report-meta {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 0 0 8px;
+}
+
+.report-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.report-steps li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.report-check {
+  font-weight: 700;
+}
+
+.report-check.done { color: #3f9c72; }
+.report-check.todo { color: #c8bcae; }
+
+.badge-done {
+  display: inline-block;
+  background: var(--green-soft);
+  color: #3f9c72;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 2px 12px;
+  margin-left: 8px;
+}
+
+/* ---------- 印刷(PDF保存)---------- */
+
+@media print {
+  html,
+  body {
+    background: #fff;
+  }
+  .print-hide {
+    display: none !important;
+  }
+  .card {
+    box-shadow: none;
+    padding: 0;
+  }
+  #app {
+    padding: 0;
+    max-width: none;
+  }
+}

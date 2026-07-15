@@ -19,6 +19,8 @@ const overlayRoot = document.getElementById("overlay-root")!;
 let settings: Settings = loadSettings();
 let assistant: Assistant | null = null;
 let simpleModeNotice = false; // AIが使えず「かんたんモード」になったことの表示用
+let lastAiError: string | null = null; // 診断用: AIが使えなかった理由
+let lastDecomposeWasFallback = false; // 直前の分解がテンプレートによるものか
 
 // ---------------------------------------------------------------------------
 // 小さなDOMヘルパー
@@ -134,8 +136,17 @@ async function webgpuSupported(): Promise<boolean> {
 async function ensureAssistant(): Promise<Assistant> {
   if (assistant) return assistant;
 
-  if (settings.preferSimple || !(await webgpuSupported())) {
-    simpleModeNotice = !settings.preferSimple;
+  if (settings.preferSimple) {
+    assistant = createSimpleAssistant();
+    return assistant;
+  }
+  if (!(await webgpuSupported())) {
+    simpleModeNotice = true;
+    lastAiError =
+      "この ブラウザでは WebGPU(AIを うごかす きのう)が つかえません。" +
+      (location.protocol === "http:"
+        ? "「http://」で ひらいているのが げんいんです。「https://」で ひらきなおしてください。"
+        : "べつの ブラウザ(Chrome・Edge など)や、あたらしい たんまつで ためしてください。");
     assistant = createSimpleAssistant();
     return assistant;
   }
@@ -162,6 +173,7 @@ async function ensureAssistant(): Promise<Assistant> {
   } catch (err) {
     console.warn("WebLLM load failed, falling back to simple mode:", err);
     simpleModeNotice = true;
+    lastAiError = `AIの じゅんびに しっぱいしました: ${String(err).slice(0, 300)}`;
     assistant = createSimpleAssistant();
   }
   return assistant;
@@ -256,13 +268,15 @@ function renderHome(): void {
 
   const screen = el("div", { class: "screen" }, [header, inputCard]);
 
-  if (simpleModeNotice) {
-    screen.append(
-      el("p", { class: "note" }, [
-        "このたんまつでは AIが つかえないので、「かんたんモード」で うごいているよ。"
-      ])
-    );
-  }
+  // いまのモードを常に表示(AIが動いているかどうかを見えるようにする)
+  const modeLabel = settings.preferSimple
+    ? "モード: かんたん(AIなし)— せっていで AIに かえられるよ"
+    : simpleModeNotice
+      ? "モード: かんたん(AIが つかえませんでした)— くわしくは「せってい」へ"
+      : assistant?.kind === "ai"
+        ? "モード: AI(じゅんびOK)"
+        : "モード: AI(はじめて つかうときに じゅんびするよ)";
+  screen.append(el("p", { class: "note", style: "text-align:center;" }, [modeLabel]));
 
   if (active.length > 0) {
     screen.append(el("p", { class: "section-label" }, ["とちゅうの やること"]));
@@ -306,8 +320,32 @@ function renderHome(): void {
 }
 
 function renderSettingsScreen(): void {
+  // AIの状態診断(なぜ「かんたんモード」になったかを見えるようにする)
+  const diagWebgpu = el("p", { style: "margin:0" }, ["WebGPU(AIの きのう): しらべているよ…"]);
+  void webgpuSupported().then((ok) => {
+    diagWebgpu.textContent = ok
+      ? "WebGPU(AIの きのう): ✅ つかえます"
+      : "WebGPU(AIの きのう): ❌ つかえません";
+  });
+  const diagCard = el("div", { class: "card" }, [
+    el("p", { style: "margin:0 0 6px; font-weight:700" }, ["AIの じょうたい"]),
+    el("p", { style: "margin:0" }, [
+      `いまのモード: ${settings.preferSimple ? "かんたん(AIなし)" : assistant?.kind === "ai" ? "AI(じゅんびOK)" : simpleModeNotice ? "かんたん(AIが つかえませんでした)" : "AI(みじゅんび)"}`
+    ]),
+    diagWebgpu,
+    el("p", { style: "margin:0" }, [
+      `ひらきかた: ${location.protocol === "https:" ? "✅ https" : `❌ ${location.protocol.replace(":", "")}(httpsで ひらいてください)`}`
+    ])
+  ]);
+  if (lastAiError) {
+    diagCard.append(
+      el("p", { class: "note", style: "margin:6px 0 0; word-break:break-all;" }, [`きろく: ${lastAiError}`])
+    );
+  }
+
   const screen = el("div", { class: "screen" }, [
     el("h1", { class: "app-title" }, ["せってい"]),
+    diagCard,
     el("div", { class: "card" }, [
       el("p", { style: "margin:0" }, [
         "このアプリの データは ぜんぶ この たんまつの 中だけに ほぞんされるよ。",
@@ -323,14 +361,10 @@ function renderSettingsScreen(): void {
         saveSettings(settings);
         assistant = null;
         simpleModeNotice = false;
+        lastAiError = null;
         renderSettingsScreen();
       }
     ),
-    el("p", { class: "note" }, [
-      settings.preferSimple
-        ? "いまは「かんたんモード」(AIなし)だよ。"
-        : "いまは「AIモード」だよ。"
-    ]),
     button("データを ぜんぶ けす", "btn", () => {
       if (window.confirm("ほんとうに データを ぜんぶ けしますか?(もとに もどせません)")) {
         clearAllData();
@@ -352,6 +386,7 @@ async function startTask(text: string): Promise<void> {
   renderThinking("ステップに わけているよ");
   try {
     const result = await ai.decompose(text);
+    lastDecomposeWasFallback = ai.kind === "simple";
     if (result.type === "question") {
       renderClarify(text, result.question);
     } else {
@@ -359,6 +394,8 @@ async function startTask(text: string): Promise<void> {
     }
   } catch (err) {
     console.warn("decompose failed, using simple mode for this task:", err);
+    lastAiError = `AIの こたえを よみとれませんでした: ${String(err).slice(0, 300)}`;
+    lastDecomposeWasFallback = true;
     const simple = createSimpleAssistant();
     const result = await simple.decompose(text);
     if (result.type === "steps") createAndPreviewTask(text, result.steps);
@@ -385,13 +422,16 @@ async function answerClarify(taskText: string, question: string, answer: string)
   try {
     const result = await ai.decompose(taskText, { question, answer });
     if (result.type === "steps") {
+      lastDecomposeWasFallback = ai.kind === "simple";
       createAndPreviewTask(taskText, result.steps);
       return;
     }
   } catch (err) {
     console.warn("clarify decompose failed:", err);
+    lastAiError = `AIの こたえを よみとれませんでした: ${String(err).slice(0, 300)}`;
   }
   // 2回目も質問が返る・失敗する場合は、かんたんモードで必ず前に進める
+  lastDecomposeWasFallback = true;
   const simple = createSimpleAssistant();
   const result = await simple.decompose(`${taskText}(${answer})`);
   if (result.type === "steps") createAndPreviewTask(taskText, result.steps);
@@ -435,6 +475,14 @@ function renderPreview(taskId: string): void {
     button("はじめる!", "btn btn-green", () => renderSteps(task.id)),
     button("← やめて ホームへ", "btn-ghost", renderHome)
   ]);
+  if (lastDecomposeWasFallback) {
+    screen.insertBefore(
+      el("p", { class: "note", style: "text-align:center;" }, [
+        "※ AIは つかわず、きほんの わけかたに したよ(くわしくは「せってい」を みてね)"
+      ]),
+      screen.children[1]
+    );
+  }
   show(screen);
   maybeSpeak(`こんなふうに わけたよ。ぜんぶで だいたい ${minutesLabel(total)}だよ。`);
 }

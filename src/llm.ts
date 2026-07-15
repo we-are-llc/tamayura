@@ -24,6 +24,26 @@ export function resolveModelId(): string | null {
   return MODEL_CANDIDATES.find((id) => available.has(id)) ?? null;
 }
 
+/**
+ * GPUが shader-f16 に対応しているか。
+ * 非対応端末(Android等に多い)で q4f16 モデルを使うと
+ * GPUPipelineError(Invalid ShaderModule)になるため、事前に判定する。
+ */
+async function shaderF16Supported(): Promise<boolean> {
+  try {
+    const gpu = (navigator as unknown as {
+      gpu?: { requestAdapter(): Promise<{ features: Set<string> } | null> };
+    }).gpu;
+    const adapter = await gpu?.requestAdapter();
+    return adapter?.features.has("shader-f16") ?? false;
+  } catch {
+    return false;
+  }
+}
+
+const toF32 = (id: string) => id.replace("q4f16_1", "q4f32_1");
+const toF16 = (id: string) => id.replace("q4f32_1", "q4f16_1");
+
 export interface LoadProgress {
   /** 0〜1 */
   progress: number;
@@ -33,14 +53,36 @@ export interface LoadProgress {
 export async function createWebLLMAssistant(
   onProgress: (p: LoadProgress) => void
 ): Promise<Assistant> {
-  const modelId = resolveModelId();
-  if (!modelId) throw new Error("no compatible model in prebuilt config");
+  const baseId = resolveModelId();
+  if (!baseId) throw new Error("no compatible model in prebuilt config");
 
-  const engine: MLCEngine = await CreateMLCEngine(modelId, {
-    initProgressCallback: (report) => {
-      onProgress({ progress: report.progress ?? 0, text: report.text ?? "" });
+  // 端末のf16対応に合わせた量子化版を第一候補にし、失敗したらもう一方で再試行する
+  const available = new Set(prebuiltAppConfig.model_list.map((m) => m.model_id));
+  const f16ok = await shaderF16Supported();
+  const primary = f16ok ? toF16(baseId) : toF32(baseId);
+  const secondary = primary.includes("q4f16_1") ? toF32(primary) : toF16(primary);
+  const tryIds = [primary, secondary].filter((id, i, a) => available.has(id) && a.indexOf(id) === i);
+  if (tryIds.length === 0) throw new Error("no compatible model in prebuilt config");
+
+  let engine: MLCEngine | null = null;
+  let loadedId = "";
+  let lastError: unknown = null;
+  for (const id of tryIds) {
+    try {
+      engine = await CreateMLCEngine(id, {
+        initProgressCallback: (report) => {
+          onProgress({ progress: report.progress ?? 0, text: report.text ?? "" });
+        }
+      });
+      loadedId = id;
+      break;
+    } catch (err) {
+      console.warn(`model load failed for ${id}:`, err);
+      lastError = err;
     }
-  });
+  }
+  if (!engine) throw lastError ?? new Error("model load failed");
+  const llm: MLCEngine = engine;
 
   // 端末性能によっては生成が終わらないことがあるため、必ずタイムアウトで打ち切る
   const CHAT_TIMEOUT_MS = 60_000;
@@ -49,7 +91,7 @@ export async function createWebLLMAssistant(
     messages: { role: "system" | "user" | "assistant"; content: string }[],
     maxTokens: number
   ): Promise<string> {
-    const request = engine.chat.completions.create({
+    const request = llm.chat.completions.create({
       messages,
       temperature: 0.3,
       max_tokens: maxTokens,
@@ -60,7 +102,7 @@ export async function createWebLLMAssistant(
     const timeout = new Promise<never>((_, reject) => {
       timer = setTimeout(() => {
         try {
-          void engine.interruptGenerate();
+          void llm.interruptGenerate();
         } catch {
           /* noop */
         }
@@ -77,6 +119,7 @@ export async function createWebLLMAssistant(
 
   return {
     kind: "ai",
+    modelId: loadedId,
 
     async decompose(taskText, clarify): Promise<DecomposeResult> {
       const messages: { role: "system" | "user" | "assistant"; content: string }[] = [

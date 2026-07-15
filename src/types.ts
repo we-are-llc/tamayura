@@ -34,6 +34,8 @@ export type DecomposeResult =
 export interface Assistant {
   /** AI(WebLLM)か、テンプレートの「かんたんモード」か */
   kind: "ai" | "simple";
+  /** 実際に読み込んだモデルID(AIのときのみ) */
+  modelId?: string;
   decompose(taskText: string, clarify?: { question: string; answer: string }): Promise<DecomposeResult>;
   help(taskTitle: string, stepTitle: string, question: string): Promise<string>;
 }

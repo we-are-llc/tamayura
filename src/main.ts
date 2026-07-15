@@ -350,7 +350,8 @@ function renderSettingsScreen(): void {
       `ひらきかた: ${location.protocol === "https:" ? "✅ https" : `❌ ${location.protocol.replace(":", "")}(httpsで ひらいてください)`}`
     ]),
     el("p", { style: "margin:0" }, [
-      `つかうモデル: ${currentModelId() === MODEL_LARGE ? "Qwen3-1.7B(かしこい)" : "Qwen3-0.6B(ふつう)"}`
+      `つかうモデル: ${currentModelId() === MODEL_LARGE ? "Qwen3-1.7B(かしこい)" : "Qwen3-0.6B(ふつう)"}` +
+        (assistant?.kind === "ai" && assistant.modelId ? `【よみこみずみ: ${assistant.modelId}】` : "")
     ])
   ]);
   if (lastAiError) {

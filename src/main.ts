@@ -286,9 +286,20 @@ function renderHome(): void {
     screen.append(list);
   }
 
+  const parentLink = el(
+    "a",
+    {
+      href: "./lp.html",
+      class: "btn-ghost",
+      style: "display:block; text-align:center; text-decoration:none;"
+    },
+    ["おうちの かたへ(このアプリの せつめい)"]
+  );
+
   screen.append(
     button("📄 きろくを 見る(PDFに できるよ)", "btn btn-soft", renderReport),
-    button("せってい と データ", "btn-ghost", renderSettingsScreen)
+    button("せってい と データ", "btn-ghost", renderSettingsScreen),
+    parentLink
   );
 
   show(screen);

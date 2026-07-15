@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="たまゆらステップは、ASD・ADHDなど発達特性のある子どもの「やることが始められない・続けられない」を、実行機能の科学にもとづいて支えるタスク分解アプリです。完全無料・アカウント不要。" />
+<title>たまゆらステップ — 「やること」を、できる大きさに。</title>
+<link rel="icon" href="./icon.svg" type="image/svg+xml" />
+<style>
+  :root {
+    --bg: #fdf6ec;
+    --card: #ffffff;
+    --ink: #4a4038;
+    --ink-soft: #8a7d70;
+    --accent: #f0a35e;
+    --accent-soft: #ffe3c2;
+    --green: #7bc7a3;
+    --green-soft: #e2f3ea;
+    --blue: #8fb8d8;
+    --blue-soft: #e6f0f8;
+    --pink-soft: #ffe9e3;
+    --radius: 22px;
+    --shadow: 0 4px 14px rgba(90, 70, 50, 0.1);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--ink);
+    font-family: "Hiragino Maru Gothic ProN", "BIZ UDGothic", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
+    font-size: 17px; line-height: 1.9;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 0 20px 60px; }
+  a { color: #4a7a9b; }
+
+  /* ヒーロー */
+  .hero { text-align: center; padding: 56px 0 40px; }
+  .hero img { width: 88px; height: 88px; }
+  .hero h1 { font-size: 34px; line-height: 1.5; margin: 16px 0 8px; }
+  .hero .lead { font-size: 19px; color: var(--ink-soft); margin: 0 0 28px; }
+  .cta {
+    display: inline-block; background: var(--accent); color: #fff;
+    font-size: 20px; font-weight: 700; text-decoration: none;
+    padding: 18px 44px; border-radius: 999px; box-shadow: var(--shadow);
+  }
+  .cta:hover { opacity: 0.92; }
+  .cta-note { font-size: 14px; color: var(--ink-soft); margin-top: 12px; }
+
+  /* ステップカードのモック */
+  .mock {
+    max-width: 340px; margin: 36px auto 0; background: var(--card);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 26px 20px; text-align: center;
+  }
+  .mock .dots { display: flex; gap: 7px; justify-content: center; margin-bottom: 14px; }
+  .mock .dot { width: 12px; height: 12px; border-radius: 50%; background: #ece0cf; }
+  .mock .dot.done { background: var(--green); }
+  .mock .dot.now { background: var(--accent); }
+  .mock .label { font-size: 13px; color: var(--ink-soft); font-weight: 700; margin: 0; }
+  .mock .title { font-size: 22px; font-weight: 700; margin: 8px 0 12px; }
+  .mock .time { display: inline-block; background: var(--blue-soft); color: #5a7a94; border-radius: 999px; padding: 4px 16px; font-size: 14px; font-weight: 700; }
+  .mock .done-btn { margin-top: 16px; background: var(--green); color: #fff; border-radius: 18px; padding: 12px; font-size: 18px; font-weight: 700; }
+
+  /* セクション */
+  section { margin-top: 64px; }
+  h2 {
+    font-size: 26px; line-height: 1.6; margin: 0 0 20px;
+    padding-left: 14px; border-left: 6px solid var(--accent);
+  }
+  h3 { font-size: 19px; margin: 28px 0 8px; }
+  .card {
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 24px 26px; margin-top: 16px;
+  }
+  .muted { color: var(--ink-soft); font-size: 15px; }
+
+  /* お悩みリスト */
+  .trouble { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .trouble li {
+    background: var(--card); border-radius: 16px; box-shadow: var(--shadow);
+    padding: 14px 18px; padding-left: 46px; position: relative;
+  }
+  .trouble li::before { content: "💭"; position: absolute; left: 14px; top: 13px; }
+
+  /* 特性→機能の対応 */
+  .pair { border-left: 5px solid var(--blue); }
+  .pair .because { margin: 0 0 10px; }
+  .pair .because strong { color: #5a7a94; }
+  .pair .so {
+    background: var(--green-soft); border-radius: 14px; padding: 12px 16px; margin: 0;
+  }
+  .pair .so strong { color: #3f9c72; }
+  .reftag { font-size: 13px; color: var(--ink-soft); white-space: nowrap; }
+
+  /* 使い方 */
+  .howto { counter-reset: step; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .howto li {
+    background: var(--card); border-radius: 16px; box-shadow: var(--shadow);
+    padding: 16px 18px 16px 62px; position: relative; counter-increment: step;
+  }
+  .howto li::before {
+    content: counter(step);
+    position: absolute; left: 14px; top: 14px;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* 安心設計 */
+  .safety { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .safety li { background: var(--card); border-radius: 16px; box-shadow: var(--shadow); padding: 14px 16px; }
+  .safety li strong { display: block; margin-bottom: 2px; }
+  @media (max-width: 560px) { .safety { grid-template-columns: 1fr; } }
+
+  /* 参考文献 */
+  .refs { font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; padding-left: 1.4em; }
+  .refs li { margin-bottom: 6px; }
+
+  .disclaimer { background: var(--pink-soft); }
+
+  footer { text-align: center; margin-top: 70px; padding-top: 30px; border-top: 2px dashed #eadfce; }
+  footer .muted { margin-top: 18px; }
+</style>
+</head>
+<body>
+<main>
+
+  <div class="hero">
+    <img src="./icon.svg" alt="たまゆらステップのアイコン" />
+    <h1>「やること」を、<br />できる大きさに。</h1>
+    <p class="lead">ASD・ADHDなど発達特性のある子どものための<br />タスク分解おてつだいアプリ「たまゆらステップ」</p>
+    <a class="cta" href="./">アプリを使ってみる</a>
+    <p class="cta-note">完全無料・アカウント不要・インストール不要。ブラウザで開くだけ。</p>
+
+    <div class="mock" aria-hidden="true">
+      <div class="dots">
+        <div class="dot done"></div><div class="dot now"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+      <p class="label">ステップ 2 / 5</p>
+      <p class="title">ふくを かごに いれる</p>
+      <span class="time">めやす: 3ぷんくらい</span>
+      <div class="done-btn">できた!</div>
+    </div>
+  </div>
+
+  <section>
+    <h2>こんな姿に、心当たりはありませんか</h2>
+    <ul class="trouble">
+      <li>「部屋を片付けて」と言っても、何から始めればいいかわからず固まってしまう</li>
+      <li>始めても途中で気がそれて、最後までたどり着けない</li>
+      <li>「あとどれくらいで終わるの?」の見通しが持てず、不安になったり癇癪につながる</li>
+      <li>あいまいな指示(「ちゃんとして」「きれいにして」)で混乱してしまう</li>
+      <li>何度も声かけを繰り返すうちに、親も子も疲れ果ててしまう</li>
+    </ul>
+    <div class="card">
+      <p style="margin:0">こうした姿は、<strong>「やる気がない」「怠けている」のではありません</strong>。ASD(自閉スペクトラム症)やADHD(注意欠如・多動症)のある子どもの脳には情報処理のスタイルに特性があり、「大きな課題をひとりで進める」ことがとりわけ難しくなることが、発達科学の研究から分かってきています。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>なぜ「やること」が難しいのか — 脳の仕組みから</h2>
+
+    <h3>① 実行機能:「段取りをつける力」の発達の偏り</h3>
+    <div class="card">
+      <p style="margin:0 0 10px">計画を立てる・手順に分ける・順番どおりに実行する——こうした「段取りの力」は<strong>実行機能</strong>と呼ばれ、主に前頭前野のネットワークが担っています(Diamond, 2013)。ADHDでは実行機能の発達に偏りがあることが中核的な特徴として繰り返し報告されています(Barkley, 1997)。</p>
+      <p style="margin:0">「部屋を片付ける」は、大人にとっては1つの指示でも、実行機能の観点では「ゴミを捨てる→服をかごへ→おもちゃを箱へ…」という<strong>多段階の計画課題</strong>です。自力で分解できないと、課題全体が漠然とした大きな壁として立ちはだかります。</p>
+    </div>
+
+    <h3>② ワーキングメモリ:「手順を頭に置いておく力」の制約</h3>
+    <div class="card">
+      <p style="margin:0">課題の実行には、手順を頭の中に保持しながら1つずつこなす<strong>ワーキングメモリ(作業記憶)</strong>が必要です。ここに弱さがあると、途中で「次に何をするんだっけ?」が頭から消えてしまいます。注意のそれやすさと重なって、「途中でやめてしまう」姿につながります。</p>
+    </div>
+
+    <h3>③ 時間知覚:「あとどれくらい」がわからない</h3>
+    <div class="card">
+      <p style="margin:0">ADHDでは時間を見積もる・時間の経過を感じとる力が弱いこと(いわゆる<strong>タイムブラインドネス</strong>)が知られています(Barkley, 1997)。また、あとでもらえる大きな報酬より目の前の小さな報酬に価値を感じやすい傾向(遅延嫌悪)も報告されています(Sonuga-Barke, 2003)。終わりの見えない課題は実際以上に大きく感じられ、取りかかる前から気持ちが折れてしまうのです。</p>
+    </div>
+
+    <h3>④ 見通しへの強いニーズ:あいまいさが不安になる</h3>
+    <div class="card">
+      <p style="margin:0">ASDでは「次に何が起こるかわからない」状態そのものが強い不安につながることが示されており、<strong>不確実性への不耐性</strong>として研究されています(Boulter et al., 2014)。「ちゃんとやって」のようなあいまいな指示は、何をどこまでやれば終わりなのかが定義されておらず、それ自体がストレス源になります。</p>
+    </div>
+
+    <h3>⑤ 感覚の特性:音や刺激で課題どころではなくなる</h3>
+    <div class="card">
+      <p style="margin:0">感覚の過敏さ・鈍感さは、ASDの診断基準(DSM-5)にも含まれる基本的な特性です(American Psychiatric Association, 2013)。突然の効果音や派手な演出のあるアプリは、それだけで注意と気力を奪ってしまうことがあります。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>たまゆらステップの仕組み — 特性を「補う」設計</h2>
+    <p>たまゆらステップの各機能は、上の①〜⑤の特性に1つずつ対応するように設計しています。根底にあるのは、応用行動分析(ABA)で確立された<strong>課題分析(task analysis)</strong>——大きな課題を実行可能な小さな行動単位に分けてから積み上げる、という支援の基本手法です(Cooper, Heron, &amp; Heward, 2020)。</p>
+
+    <div class="card pair">
+      <p class="because"><strong>① 実行機能の代行:</strong>「へやを かたづける」と入れるだけで、AIが3〜6個の小さなステップに自動で分解します。あいまいな内容のときは、AIのほうから質問して内容をはっきりさせてから分解します。<span class="reftag">(課題分析/Cooper et al., 2020)</span></p>
+      <p class="so"><strong>→ 子どもは「段取り」を考えなくていい。</strong>いま目の前の1つだけに取り組めます。</p>
+    </div>
+
+    <div class="card pair">
+      <p class="because"><strong>② ワーキングメモリの外部化:</strong>画面には<strong>いま取り組む1ステップだけ</strong>を大きく表示します(1画面1情報)。手順の記憶をアプリが肩代わりする、TEACCHプログラムの「視覚的構造化」と同じ発想です。<span class="reftag">(Mesibov, Shea, &amp; Schopler, 2005)</span></p>
+      <p class="so"><strong>→ 「次に何だっけ?」が起きない。</strong>気がそれても、画面に戻れば続きがそこにあります。</p>
+    </div>
+
+    <div class="card pair">
+      <p class="because"><strong>③ 時間の見える化:</strong>各ステップに「めやす: 3ぷんくらい」の所要時間を表示し、はじめる前には全ステップと合計時間の一覧で<strong>見通し</strong>を示します。</p>
+      <p class="so"><strong>→ 「終わりの見えない大きな山」が「3分の坂を5回」になる。</strong>取りかかるハードルが下がります。</p>
+    </div>
+
+    <div class="card pair">
+      <p class="because"><strong>④ あいまいさと孤立の解消:</strong>実行の途中で困ったら「こまった・しつもん」ボタンからいつでも質問でき、AIがやさしい日本語で短く答えます。人に助けを求める練習(援助要求)の足がかりにもなります。</p>
+      <p class="so"><strong>→ 「わからないまま止まる」時間をなくす。</strong>危ないことやわからないことは「おうちの人にきいてね」と促します。</p>
+    </div>
+
+    <div class="card pair">
+      <p class="because"><strong>⑤ 即時フィードバック:</strong>1ステップ終わるごとに「できた!」を押して達成をその場で確認。遅延報酬が苦手な特性(Sonuga-Barke, 2003)に合わせ、小さな達成をすぐ返します。がんばりの記録はPDFにして残せます。</p>
+      <p class="so"><strong>→ 成功体験が積み上がって見える。</strong>「自分にもできた」の実感(自己効力感/Bandura, 1977)を育てます。</p>
+    </div>
+
+    <div class="card pair">
+      <p class="because"><strong>感覚過敏への配慮:</strong>効果音なし・落ち着いた配色・急な動きのない画面。読み上げ(音声)はいつでもワンタップでON/OFFできます。読み書きに困難がある場合は、音声入力と読み上げで文字への依存を減らせます。</p>
+      <p class="so"><strong>→ 刺激で消耗しない。</strong>その子に合う入出力(声/文字)を選べます。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>安心して使える設計</h2>
+    <ul class="safety">
+      <li><strong>🆓 完全無料・広告なし</strong>AIもブラウザの中で動くため、運営コストがかからない仕組みです。</li>
+      <li><strong>👤 アカウント不要</strong>登録・ログインは一切ありません。開いたらすぐ使えます。</li>
+      <li><strong>🔒 データは端末の中だけ</strong>入力した「やること」や記録は端末内にのみ保存され、外部のサーバーには送信されません。</li>
+      <li><strong>📱 インストール不要</strong>ブラウザで開くだけ。家庭のスマホ・タブレット・PCで使えます。</li>
+    </ul>
+    <p class="muted">※ 初回のみAIのデータ(約500MB)をダウンロードします(Wi-Fi推奨・2回目からは高速起動)。AIに対応していない端末では、あらかじめ用意された分け方で動く「かんたんモード」に自動で切り替わります。</p>
+  </section>
+
+  <section>
+    <h2>使い方は3ステップ</h2>
+    <ol class="howto">
+      <li><strong>やることを話す(または書く)</strong><br />「へやを かたづける」——マイクボタンで音声入力もできます。</li>
+      <li><strong>分け方をたしかめて「はじめる!」</strong><br />ステップの一覧と合計時間で、先の見通しを確認します。</li>
+      <li><strong>1つずつ「できた!」</strong><br />全部できたら、いっしょにほめてあげてください。記録はPDFで残せます。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>大切なおことわり</h2>
+    <div class="card disclaimer">
+      <p style="margin:0">たまゆらステップは家庭での生活を支える<strong>補助ツール</strong>であり、医療機器や診断・治療の手段ではありません。効果には個人差があります。発達についての心配や、生活上の困りごとが大きい場合は、かかりつけ医、地域の発達障害者支援センター、児童発達支援・放課後等デイサービスなどの専門機関にご相談ください。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>参考文献</h2>
+    <ol class="refs">
+      <li>Diamond, A. (2013). Executive functions. <i>Annual Review of Psychology, 64</i>, 135–168.</li>
+      <li>Barkley, R. A. (1997). Behavioral inhibition, sustained attention, and executive functions: Constructing a unifying theory of ADHD. <i>Psychological Bulletin, 121</i>(1), 65–94.</li>
+      <li>Sonuga-Barke, E. J. S. (2003). The dual pathway model of AD/HD: An elaboration of neuro-developmental characteristics. <i>Neuroscience &amp; Biobehavioral Reviews, 27</i>(7), 593–604.</li>
+      <li>Boulter, C., Freeston, M., South, M., &amp; Rodgers, J. (2014). Intolerance of uncertainty as a framework for understanding anxiety in children and adolescents with autism spectrum disorders. <i>Journal of Autism and Developmental Disorders, 44</i>(6), 1391–1402.</li>
+      <li>American Psychiatric Association (2013). <i>Diagnostic and Statistical Manual of Mental Disorders</i> (5th ed.).</li>
+      <li>Mesibov, G. B., Shea, V., &amp; Schopler, E. (2005). <i>The TEACCH Approach to Autism Spectrum Disorders.</i> Springer.</li>
+      <li>Cooper, J. O., Heron, T. E., &amp; Heward, W. L. (2020). <i>Applied Behavior Analysis</i> (3rd ed.). Pearson.</li>
+      <li>Bandura, A. (1977). Self-efficacy: Toward a unifying theory of behavioral change. <i>Psychological Review, 84</i>(2), 191–215.</li>
+    </ol>
+  </section>
+
+  <footer>
+    <a class="cta" href="./">アプリを使ってみる</a>
+    <p class="cta-note">完全無料・アカウント不要・データは端末の中だけ。</p>
+    <p class="muted">たまゆらステップ</p>
+  </footer>
+
+</main>
+</body>
+</html>

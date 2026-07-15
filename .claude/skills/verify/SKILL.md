@@ -1,9 +1,9 @@
 ---
 name: verify
-description: たまゆらステップ(ブラウザ内LLMタスク分解アプリ)の動作検証手順
+description: たまゆら(ブラウザ内LLMタスク分解アプリ)の動作検証手順
 ---
 
-# Verify: たまゆらステップ
+# Verify: たまゆら
 
 ## Build & launch
 

@@ -242,7 +242,7 @@ function renderHome(): void {
   const header = el("div", { class: "app-header" }, [
     el("h1", { class: "app-title" }, [
       el("img", { src: "./icon.svg", alt: "" }),
-      "たまゆらステップ"
+      "たまゆらβ"
     ]),
     speechToggle
   ]);

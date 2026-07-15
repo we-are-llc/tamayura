@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="たまゆらステップは、ASD・ADHDなど発達特性のある子どもの「やることが始められない・続けられない」を、実行機能の科学にもとづいて支えるタスク分解アプリです。完全無料・アカウント不要。" />
-<title>たまゆらステップ — 「やること」を、できる大きさに。</title>
+<meta name="description" content="たまゆらは、ASD・ADHDなど発達特性のある子どもの「やることが始められない・続けられない」を、実行機能の科学にもとづいて支えるタスク分解アプリです。完全無料・アカウント不要。" />
+<title>たまゆらβ — 「やること」を、できる大きさに。</title>
 <link rel="icon" href="./icon.svg" type="image/svg+xml" />
 <style>
   :root {
@@ -119,15 +119,32 @@
 
   footer { text-align: center; margin-top: 70px; padding-top: 30px; border-top: 2px dashed #eadfce; }
   footer .muted { margin-top: 18px; }
+
+  /* SNSシェア */
+  .share { text-align: center; }
+  .share-label { font-weight: 700; margin: 0 0 14px; }
+  .share-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .share-buttons a {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 22px; border-radius: 999px;
+    font-size: 15px; font-weight: 700; text-decoration: none;
+    color: #fff; box-shadow: var(--shadow);
+  }
+  .share-buttons a:hover { opacity: 0.9; }
+  .share-x { background: #24292f; }
+  .share-line { background: #06c152; }
+  .share-fb { background: #4267b2; }
+  .share-hatena { background: #00a4de; }
 </style>
 </head>
 <body>
 <main>
 
   <div class="hero">
-    <img src="./icon.svg" alt="たまゆらステップのアイコン" />
+    <img src="./icon.svg" alt="たまゆらのアイコン" />
     <h1>「やること」を、<br />できる大きさに。</h1>
-    <p class="lead">ASD・ADHDなど発達特性のある子どものための<br />タスク分解おてつだいアプリ「たまゆらステップ」</p>
+    <p class="lead">ASD・ADHDなど発達特性のある子どものための<br />タスク分解おてつだいアプリ「たまゆらβ」</p>
+    <p class="cta-note" style="margin-top:0">※ 現在βリリース(試験公開)中です。</p>
     <a class="cta" href="./">アプリを使ってみる</a>
     <p class="cta-note">完全無料・アカウント不要・インストール不要。ブラウザで開くだけ。</p>
 
@@ -187,8 +204,8 @@
   </section>
 
   <section>
-    <h2>たまゆらステップの仕組み — 特性を「補う」設計</h2>
-    <p>たまゆらステップの各機能は、上の①〜⑤の特性に1つずつ対応するように設計しています。根底にあるのは、応用行動分析(ABA)で確立された<strong>課題分析(task analysis)</strong>——大きな課題を実行可能な小さな行動単位に分けてから積み上げる、という支援の基本手法です(Cooper, Heron, &amp; Heward, 2020)。</p>
+    <h2>たまゆらの仕組み — 特性を「補う」設計</h2>
+    <p>たまゆらの各機能は、上の①〜⑤の特性に1つずつ対応するように設計しています。根底にあるのは、応用行動分析(ABA)で確立された<strong>課題分析(task analysis)</strong>——大きな課題を実行可能な小さな行動単位に分けてから積み上げる、という支援の基本手法です(Cooper, Heron, &amp; Heward, 2020)。</p>
 
     <div class="card pair">
       <p class="because"><strong>① 実行機能の代行:</strong>「へやを かたづける」と入れるだけで、AIが3〜6個の小さなステップに自動で分解します。あいまいな内容のときは、AIのほうから質問して内容をはっきりさせてから分解します。<span class="reftag">(課題分析/Cooper et al., 2020)</span></p>
@@ -244,7 +261,7 @@
   <section>
     <h2>大切なおことわり</h2>
     <div class="card disclaimer">
-      <p style="margin:0">たまゆらステップは家庭での生活を支える<strong>補助ツール</strong>であり、医療機器や診断・治療の手段ではありません。効果には個人差があります。発達についての心配や、生活上の困りごとが大きい場合は、かかりつけ医、地域の発達障害者支援センター、児童発達支援・放課後等デイサービスなどの専門機関にご相談ください。</p>
+      <p style="margin:0">たまゆらは家庭での生活を支える<strong>補助ツール</strong>であり、医療機器や診断・治療の手段ではありません。効果には個人差があります。発達についての心配や、生活上の困りごとが大きい場合は、かかりつけ医、地域の発達障害者支援センター、児童発達支援・放課後等デイサービスなどの専門機関にご相談ください。</p>
     </div>
   </section>
 
@@ -262,10 +279,23 @@
     </ol>
   </section>
 
+  <section class="share">
+    <p class="share-label">このページをシェアして、必要としている家庭に届ける</p>
+    <div class="share-buttons">
+      <a class="share-x" href="https://twitter.com/intent/tweet?text=%E3%81%9F%E3%81%BE%E3%82%86%E3%82%89%20%E2%80%94%20ASD%E3%83%BBADHD%E3%81%AA%E3%81%A9%E7%99%BA%E9%81%94%E7%89%B9%E6%80%A7%E3%81%AE%E3%81%82%E3%82%8B%E5%AD%90%E3%81%A9%E3%82%82%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AE%E3%82%BF%E3%82%B9%E3%82%AF%E5%88%86%E8%A7%A3%E3%81%8A%E3%81%A6%E3%81%A4%E3%81%A0%E3%81%84%E3%82%A2%E3%83%97%E3%83%AA%EF%BC%88%E5%AE%8C%E5%85%A8%E7%84%A1%E6%96%99%E3%83%BB%E3%82%A2%E3%82%AB%E3%82%A6%E3%83%B3%E3%83%88%E4%B8%8D%E8%A6%81%EF%BC%89&amp;url=https%3A%2F%2Ftamayura.we-re.net%2Flp.html" target="_blank" rel="noopener noreferrer">𝕏 でシェア</a>
+      <a class="share-line" href="https://social-plugins.line.me/lineit/share?url=https%3A%2F%2Ftamayura.we-re.net%2Flp.html" target="_blank" rel="noopener noreferrer">LINE で送る</a>
+      <a class="share-fb" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Ftamayura.we-re.net%2Flp.html" target="_blank" rel="noopener noreferrer">Facebook</a>
+      <a class="share-hatena" href="https://b.hatena.ne.jp/entry/panel/?url=https%3A%2F%2Ftamayura.we-re.net%2Flp.html" target="_blank" rel="noopener noreferrer">はてブ</a>
+    </div>
+    <p class="muted" style="margin-top:12px">※ シェアボタンは各SNSの投稿画面を開くだけで、このページに計測タグ等は入っていません。</p>
+  </section>
+
   <footer>
     <a class="cta" href="./">アプリを使ってみる</a>
     <p class="cta-note">完全無料・アカウント不要・データは端末の中だけ。</p>
-    <p class="muted">たまゆらステップ</p>
+    <p class="muted">たまゆらβ</p>
+    <p class="muted" style="margin-top:6px">開発・運営:ウィアー合同会社 <a href="https://we-re.net" target="_blank" rel="noopener noreferrer">we-re.net</a></p>
+    <p class="muted" style="margin-top:2px">Copy right &copy; 2026 We are, LLC All rights reserved.</p>
   </footer>
 
 </main>

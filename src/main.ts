@@ -32,6 +32,21 @@ function currentModelId(): string {
   return localStorage.getItem(MODEL_OVERRIDE_KEY) ?? MODEL_SMALL;
 }
 
+// この端末でAIが安定しているかの記録(2回失敗したらかんたんモードをすすめる)
+const AI_FAIL_KEY = "tamayura.aiFailCount";
+
+function aiFailCount(): number {
+  return Number(localStorage.getItem(AI_FAIL_KEY)) || 0;
+}
+
+function recordAiFail(): void {
+  localStorage.setItem(AI_FAIL_KEY, String(aiFailCount() + 1));
+}
+
+function recordAiSuccess(): void {
+  localStorage.removeItem(AI_FAIL_KEY);
+}
+
 // ---------------------------------------------------------------------------
 // 小さなDOMヘルパー
 // ---------------------------------------------------------------------------
@@ -287,6 +302,27 @@ function renderHome(): void {
 
   const screen = el("div", { class: "screen" }, [header, inputCard]);
 
+  // AIが2回以上失敗している端末では、かんたんモードへの切り替えをすすめる
+  if (!settings.preferSimple && aiFailCount() >= 2) {
+    screen.append(
+      el("div", { class: "card" }, [
+        el("p", { style: "margin:0 0 10px" }, [
+          "この たんまつでは AIが あんていして うごかないみたい。",
+          el("br"),
+          "「かんたんモード」なら まつ じかんなしで つかえるよ。"
+        ]),
+        button("かんたんモードに きりかえる", "btn btn-soft", () => {
+          settings = { ...settings, preferSimple: true };
+          saveSettings(settings);
+          assistant = null;
+          simpleModeNotice = false;
+          recordAiSuccess();
+          renderHome();
+        })
+      ])
+    );
+  }
+
   // いまのモードを常に表示(AIが動いているかどうかを見えるようにする)
   const modeLabel = settings.preferSimple
     ? "モード: かんたん(AIなし)— せっていで AIに かえられるよ"
@@ -442,6 +478,7 @@ async function startTask(text: string): Promise<void> {
     const result = await ai.decompose(text, undefined, (chars) =>
       thinking.setDetail(`かんがえて かいているよ… ${chars}もじ`)
     );
+    if (ai.kind === "ai") recordAiSuccess();
     if (token !== navToken) return; // とちゅうでホームに戻っていたら何もしない
     lastDecomposeWasFallback = ai.kind === "simple";
     if (result.type === "question") {
@@ -452,6 +489,7 @@ async function startTask(text: string): Promise<void> {
   } catch (err) {
     console.warn("decompose failed, using simple mode for this task:", err);
     lastAiError = `AIの こたえを よみとれませんでした: ${String(err).slice(0, 300)}`;
+    recordAiFail();
     if (token !== navToken) return;
     lastDecomposeWasFallback = true;
     const simple = createSimpleAssistant();
@@ -491,6 +529,7 @@ async function answerClarify(taskText: string, question: string, answer: string)
   } catch (err) {
     console.warn("clarify decompose failed:", err);
     lastAiError = `AIの こたえを よみとれませんでした: ${String(err).slice(0, 300)}`;
+    recordAiFail();
   }
   if (token !== navToken) return;
   // 2回目も質問が返る・失敗する場合は、かんたんモードで必ず前に進める

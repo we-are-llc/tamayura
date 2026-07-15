@@ -106,23 +106,37 @@ export async function createWebLLMAssistant(
     const startedAt = Date.now();
     let lastChunkAt = Date.now();
     let timeoutReason: string | null = null;
+    let interruptedAt = 0;
+    // GPUが完全に固まると interruptGenerate も効かずストリームが終わらないことがあるため、
+    // 中断後10秒たったらストリームを見捨てて強制的にエラーにする
+    let rejectHard: (e: Error) => void = () => {};
+    const hardFail = new Promise<never>((_, reject) => {
+      rejectHard = reject;
+    });
     const watchdog = setInterval(() => {
       const now = Date.now();
-      if (now - lastChunkAt > STALL_TIMEOUT_MS) {
-        timeoutReason = "とちゅうで とまってしまった";
-      } else if (now - startedAt > TOTAL_TIMEOUT_MS) {
-        timeoutReason = "じかんが かかりすぎた";
-      }
-      if (timeoutReason) {
-        clearInterval(watchdog);
-        try {
-          void llm.interruptGenerate();
-        } catch {
-          /* noop */
+      if (!timeoutReason) {
+        if (now - lastChunkAt > STALL_TIMEOUT_MS) {
+          timeoutReason = "とちゅうで とまってしまった";
+        } else if (now - startedAt > TOTAL_TIMEOUT_MS) {
+          timeoutReason = "じかんが かかりすぎた";
         }
+        if (timeoutReason) {
+          interruptedAt = now;
+          try {
+            void llm.interruptGenerate();
+          } catch {
+            /* noop */
+          }
+        }
+      } else if (now - interruptedAt > 10_000) {
+        clearInterval(watchdog);
+        rejectHard(
+          new Error(`AIの こたえが ${timeoutReason}ため、うちきりました(${text.length}もじまで生成)`)
+        );
       }
     }, 1000);
-    try {
+    const consume = (async () => {
       for await (const chunk of stream) {
         const delta = chunk.choices[0]?.delta?.content ?? "";
         if (delta) {
@@ -131,6 +145,9 @@ export async function createWebLLMAssistant(
           onProgress?.(text.length);
         }
       }
+    })();
+    try {
+      await Promise.race([consume, hardFail]);
     } finally {
       clearInterval(watchdog);
     }

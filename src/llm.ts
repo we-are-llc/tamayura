@@ -84,44 +84,67 @@ export async function createWebLLMAssistant(
   if (!engine) throw lastError ?? new Error("model load failed");
   const llm: MLCEngine = engine;
 
-  // 端末性能によっては生成が終わらないことがあるため、必ずタイムアウトで打ち切る
-  const CHAT_TIMEOUT_MS = 60_000;
+  // 遅い端末でも完走できるようストリーミングで受け取り、
+  // 「進まなくなったとき」だけ打ち切る(停滞30秒 / 合計4分)
+  const STALL_TIMEOUT_MS = 30_000;
+  const TOTAL_TIMEOUT_MS = 240_000;
 
   async function chat(
     messages: { role: "system" | "user" | "assistant"; content: string }[],
-    maxTokens: number
+    maxTokens: number,
+    onProgress?: (chars: number) => void
   ): Promise<string> {
-    const request = llm.chat.completions.create({
+    const stream = await llm.chat.completions.create({
       messages,
       temperature: 0.3,
       max_tokens: maxTokens,
       // Qwen3の思考モードをテンプレートレベルで無効化(思考トークンの浪費と出力崩れを防ぐ)
-      extra_body: { enable_thinking: false }
+      extra_body: { enable_thinking: false },
+      stream: true
     });
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const timeout = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => {
+    let text = "";
+    const startedAt = Date.now();
+    let lastChunkAt = Date.now();
+    let timeoutReason: string | null = null;
+    const watchdog = setInterval(() => {
+      const now = Date.now();
+      if (now - lastChunkAt > STALL_TIMEOUT_MS) {
+        timeoutReason = "とちゅうで とまってしまった";
+      } else if (now - startedAt > TOTAL_TIMEOUT_MS) {
+        timeoutReason = "じかんが かかりすぎた";
+      }
+      if (timeoutReason) {
+        clearInterval(watchdog);
         try {
           void llm.interruptGenerate();
         } catch {
           /* noop */
         }
-        reject(new Error("AIの こたえが 60びょう いじょう かかったため、うちきりました"));
-      }, CHAT_TIMEOUT_MS);
-    });
+      }
+    }, 1000);
     try {
-      const res = await Promise.race([request, timeout]);
-      return stripThink(res.choices[0]?.message?.content ?? "");
+      for await (const chunk of stream) {
+        const delta = chunk.choices[0]?.delta?.content ?? "";
+        if (delta) {
+          text += delta;
+          lastChunkAt = Date.now();
+          onProgress?.(text.length);
+        }
+      }
     } finally {
-      clearTimeout(timer);
+      clearInterval(watchdog);
     }
+    if (timeoutReason) {
+      throw new Error(`AIの こたえが ${timeoutReason}ため、うちきりました(${text.length}もじまで生成)`);
+    }
+    return stripThink(text);
   }
 
   return {
     kind: "ai",
     modelId: loadedId,
 
-    async decompose(taskText, clarify): Promise<DecomposeResult> {
+    async decompose(taskText, clarify, onProgress): Promise<DecomposeResult> {
       const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
         { role: "system", content: DECOMPOSE_SYSTEM },
         ...DECOMPOSE_FEWSHOT,
@@ -138,13 +161,13 @@ export async function createWebLLMAssistant(
         });
       }
 
-      let raw = await chat(messages, 600);
+      let raw = await chat(messages, 600, onProgress);
       let result = parseDecomposeResult(raw);
       if (!result) {
         // JSONとして読めなかったら、形式を念押しして1回だけリトライ
         messages.push({ role: "assistant", content: raw });
         messages.push({ role: "user", content: RETRY_JSON_MESSAGE });
-        raw = await chat(messages, 600);
+        raw = await chat(messages, 600, onProgress);
         result = parseDecomposeResult(raw);
       }
       if (!result) throw new Error("decompose failed: " + raw.slice(0, 200));

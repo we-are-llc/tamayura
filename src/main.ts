@@ -233,14 +233,20 @@ function renderLoading(): { update: (p: number) => void } {
   };
 }
 
-function renderThinking(message: string): void {
+function renderThinking(message: string): { setDetail: (text: string) => void } {
+  const detail = el("p", { class: "note" }, ["すこし じかんが かかることが あるよ"]);
   const screen = el("div", { class: "screen loading-screen" }, [
     el("div", { class: "chara", "aria-hidden": "true" }),
     el("p", { class: "loading-big thinking-dots" }, [message]),
-    el("p", { class: "note" }, ["すこし じかんが かかることが あるよ"]),
+    detail,
     button("← やめて ホームへ", "btn-ghost", renderHome)
   ]);
   show(screen);
+  return {
+    setDetail(text: string) {
+      detail.textContent = text;
+    }
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -431,9 +437,11 @@ function renderSettingsScreen(): void {
 async function startTask(text: string): Promise<void> {
   const token = navToken;
   const ai = await ensureAssistant();
-  renderThinking("ステップに わけているよ");
+  const thinking = renderThinking("ステップに わけているよ");
   try {
-    const result = await ai.decompose(text);
+    const result = await ai.decompose(text, undefined, (chars) =>
+      thinking.setDetail(`かんがえて かいているよ… ${chars}もじ`)
+    );
     if (token !== navToken) return; // とちゅうでホームに戻っていたら何もしない
     lastDecomposeWasFallback = ai.kind === "simple";
     if (result.type === "question") {
@@ -469,9 +477,11 @@ function renderClarify(taskText: string, question: string): void {
 async function answerClarify(taskText: string, question: string, answer: string): Promise<void> {
   const token = navToken;
   const ai = await ensureAssistant();
-  renderThinking("ステップに わけているよ");
+  const thinking = renderThinking("ステップに わけているよ");
   try {
-    const result = await ai.decompose(taskText, { question, answer });
+    const result = await ai.decompose(taskText, { question, answer }, (chars) =>
+      thinking.setDetail(`かんがえて かいているよ… ${chars}もじ`)
+    );
     if (token !== navToken) return;
     if (result.type === "steps") {
       lastDecomposeWasFallback = ai.kind === "simple";

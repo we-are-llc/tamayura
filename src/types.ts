@@ -36,6 +36,10 @@ export interface Assistant {
   kind: "ai" | "simple";
   /** 実際に読み込んだモデルID(AIのときのみ) */
   modelId?: string;
-  decompose(taskText: string, clarify?: { question: string; answer: string }): Promise<DecomposeResult>;
+  decompose(
+    taskText: string,
+    clarify?: { question: string; answer: string },
+    onProgress?: (chars: number) => void
+  ): Promise<DecomposeResult>;
   help(taskTitle: string, stepTitle: string, question: string): Promise<string>;
 }

@@ -73,6 +73,17 @@ npm run preview  # ビルド結果の確認
 - 非対応環境では「かんたんモード」で動作
 - 音声入力(SpeechRecognition)は Chrome 系で利用可。非対応環境ではマイクボタンが自動的に隠れる
 
+## 利用しているOSSとライセンス表記
+
+| 対象 | 提供元 | ライセンス |
+|---|---|---|
+| [Qwen3](https://github.com/QwenLM/Qwen3)(AIモデル) | Alibaba Cloud | [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) |
+| [WebLLM](https://github.com/mlc-ai/web-llm)(ブラウザ内推論エンジン) | MLC AI | Apache License 2.0 |
+| [Vite](https://vitejs.dev/)(ビルドツール) | — | MIT License |
+
+各名称・商標はそれぞれの権利者に帰属します。本アプリは各提供元との提携・公認関係にはありません。
+クレジットはアプリの「せってい」画面および紹介ページ(`lp.html`)にも表示しています。
+
 ## プライバシー
 
 - 入力されたタスク・記録はすべて端末内の localStorage にのみ保存され、外部に送信されません

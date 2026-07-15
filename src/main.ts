@@ -372,6 +372,11 @@ function renderSettingsScreen(): void {
         renderHome();
       }
     }),
+    el("p", { class: "note", style: "text-align:center;" }, [
+      "AIモデル: Qwen3 © Alibaba Cloud(Apache License 2.0)",
+      el("br"),
+      "推論エンジン: WebLLM / MLC AI(Apache License 2.0)"
+    ]),
     button("← ホームへ もどる", "btn-ghost", renderHome)
   ]);
   show(screen);

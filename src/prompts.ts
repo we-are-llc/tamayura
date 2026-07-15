@@ -14,23 +14,34 @@ export const DECOMPOSE_SYSTEM = `あなたは、発達特性のある子ども(A
 - 1つのステップは1つの動作だけ。やさしい日本語で20文字以内。むずかしい漢字はひらがなにする。
 - 各ステップに、かかる時間のめやす minutes(1〜15の整数)をつける。
 - 「やること」があいまいで分けられないときだけ、質問を1つ返す。
+- れいの文をコピーしない。「やること」の内容に合わせて、じっさいに必要な行動を考える。
 
 出力形式(どちらか1つ):
 {"type":"steps","steps":[{"title":"ステップの文","minutes":3}]}
 {"type":"question","question":"子どもへのしつもん"}`;
 
-/** 小型モデル向けのfew-shot例(質問する例 → 分解する例の順) */
+/**
+ * 小型モデル向けのfew-shot例。
+ * 例が1つだけだと内容ごと丸写しされるため、領域の違う分解例を2つ
+ * (片付け・買い物)見せて「構造の見本であって内容ではない」と学ばせる。
+ */
 export const DECOMPOSE_FEWSHOT: { role: "user" | "assistant"; content: string }[] = [
-  { role: "user", content: "やること: おみせにいく" },
+  { role: "user", content: "やること: あれを ちゃんと やっておいて" },
   {
     role: "assistant",
-    content: '{"type":"question","question":"どこの おみせに、なにを しに いくのかな?"}'
+    content: '{"type":"question","question":"なにを どこで やるのか、もうすこし おしえてね。"}'
   },
   { role: "user", content: "やること: へやを かたづける" },
   {
     role: "assistant",
     content:
       '{"type":"steps","steps":[{"title":"ごみを ごみばこに いれる","minutes":3},{"title":"ふくを かごに いれる","minutes":3},{"title":"おもちゃを はこに もどす","minutes":5},{"title":"ほんを ほんだなに もどす","minutes":3},{"title":"さいごに へやを みわたす","minutes":2}]}'
+  },
+  { role: "user", content: "やること: スーパーで たまごを かってくる" },
+  {
+    role: "assistant",
+    content:
+      '{"type":"steps","steps":[{"title":"おかねか カードを もつ","minutes":2},{"title":"くつを はいて でかける","minutes":3},{"title":"スーパーまで いく","minutes":10},{"title":"たまごを かごに いれる","minutes":3},{"title":"レジで はらって かえる","minutes":10}]}'
   }
 ];
 

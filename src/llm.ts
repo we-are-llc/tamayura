@@ -1,6 +1,6 @@
 import { CreateMLCEngine, prebuiltAppConfig, type MLCEngine } from "@mlc-ai/web-llm";
 import type { Assistant, DecomposeResult } from "./types.ts";
-import { DECOMPOSE_SYSTEM, HELP_SYSTEM, RETRY_JSON_MESSAGE } from "./prompts.ts";
+import { DECOMPOSE_FEWSHOT, DECOMPOSE_SYSTEM, HELP_SYSTEM, RETRY_JSON_MESSAGE } from "./prompts.ts";
 
 /**
  * ブラウザ内LLM(WebLLM)によるアシスタント。
@@ -81,6 +81,7 @@ export async function createWebLLMAssistant(
     async decompose(taskText, clarify): Promise<DecomposeResult> {
       const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
         { role: "system", content: DECOMPOSE_SYSTEM },
+        ...DECOMPOSE_FEWSHOT,
         { role: "user", content: `やること: ${taskText}` }
       ];
       if (clarify) {
